@@ -23,6 +23,8 @@ import org.springframework.lang.Nullable;
  * Applications can use this directly, but it is not primarily meant as API:
  * Typically, applications will work with either TransactionTemplate or
  * declarative transaction demarcation through AOP.
+ * 在spring体系中这是一个核心的接口，但是他不意味着是主要的api。
+ * 通常应用程序使用事务模板或者aop事务
  *
  * <p>For implementors, it is recommended to derive from the provided
  * {@link org.springframework.transaction.support.AbstractPlatformTransactionManager}
@@ -30,6 +32,8 @@ import org.springframework.lang.Nullable;
  * of transaction synchronization handling. Subclasses have to implement
  * template methods for specific states of the underlying transaction,
  * for example: begin, suspend, resume, commit.
+ * 子类只需要继承抽象的事务管理器{@link org.springframework.transaction.support.AbstractPlatformTransactionManager}
+ * 然后重写其中的模板方法即可
  *
  * <p>The default implementations of this strategy interface are
  * {@link org.springframework.transaction.jta.JtaTransactionManager} and

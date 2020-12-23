@@ -32,6 +32,7 @@ import org.springframework.util.Assert;
 
 /**
  * Template class that simplifies programmatic transaction demarcation and
+ * 模板类使得事务编程变得更加简单，并且能够处理事务异常
  * transaction exception handling.
  *
  * <p>The central method is {@link #execute}, supporting transactional code that
@@ -39,6 +40,8 @@ import org.springframework.util.Assert;
  * the transaction lifecycle and possible exceptions such that neither the
  * TransactionCallback implementation nor the calling code needs to explicitly
  * handle transactions.
+ * 该类实现了{@link TransactionCallback}接口，核心方法是{@link #execute}.该模板类处理整个
+ * 事务的生命周期和可能出现的异常，因此回调实现和显示调用都不需要处理异常
  *
  * <p>Typical usage: Allows for writing low-level data access objects that use
  * resources such as JDBC DataSources but are not transaction-aware themselves.
