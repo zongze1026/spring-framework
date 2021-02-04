@@ -83,10 +83,11 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	private final Map<String, Object> earlySingletonObjects = new HashMap<>(16);
 
 	/** Set of registered singletons, containing the bean names in registration order */
+	//用于记录已经注册过的单例bean的名称
 	private final Set<String> registeredSingletons = new LinkedHashSet<>(256);
 
 	/** Names of beans that are currently in creation */
-	//记录正在创建的单例bean的名称
+	//记录正在创建的单例bean的名称;防止重复创建
 	private final Set<String> singletonsCurrentlyInCreation =
 			Collections.newSetFromMap(new ConcurrentHashMap<>(16));
 
@@ -95,6 +96,7 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 			Collections.newSetFromMap(new ConcurrentHashMap<>(16));
 
 	/** List of suppressed Exceptions, available for associating related causes */
+	//用来存储异常
 	@Nullable
 	private Set<Exception> suppressedExceptions;
 
@@ -120,12 +122,15 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 	public void registerSingleton(String beanName, Object singletonObject) throws IllegalStateException {
 		Assert.notNull(beanName, "Bean name must not be null");
 		Assert.notNull(singletonObject, "Singleton object must not be null");
+		//加锁同步，防止并发
 		synchronized (this.singletonObjects) {
 			Object oldObject = this.singletonObjects.get(beanName);
+			//如果已经注册过的话抛出异常
 			if (oldObject != null) {
 				throw new IllegalStateException("Could not register object [" + singletonObject +
 						"] under bean name '" + beanName + "': there is already object [" + oldObject + "] bound");
 			}
+			//真正注册实现
 			addSingleton(beanName, singletonObject);
 		}
 	}
@@ -140,11 +145,12 @@ public class DefaultSingletonBeanRegistry extends SimpleAliasRegistry implements
 		synchronized (this.singletonObjects) {
 			//添加一级缓存
 			this.singletonObjects.put(beanName, singletonObject);
-			//1.如果当前bean没有出现循环引用的话;singletonFactories中的ObjectFactory是不会被调用的；需要手动移除
+			//移除三级缓存
+			//如果当前bean没有出现循环引用的话;singletonFactories中的ObjectFactory是不会被调用的；需要手动移除
 			this.singletonFactories.remove(beanName);
 			//移除二级缓存
 			this.earlySingletonObjects.remove(beanName);
-			//添加单例池
+			//记录单例bean名称
 			this.registeredSingletons.add(beanName);
 		}
 	}

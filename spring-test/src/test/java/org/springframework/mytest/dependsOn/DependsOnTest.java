@@ -17,6 +17,11 @@ public class DependsOnTest {
 
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(BeanInitConfig.class);
 		ClassA classA = (ClassA) context.getBean("classA");
+		context.registerAlias("classA", "a");
+		context.registerAlias("classA", "b");
+		context.registerAlias("a", "b");
+		context.getAliases("classA");
+
 
 
 	}

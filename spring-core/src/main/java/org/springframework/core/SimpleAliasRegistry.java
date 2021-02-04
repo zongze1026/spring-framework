@@ -52,16 +52,18 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	public void registerAlias(String name, String alias) {
 		Assert.hasText(name, "'name' must not be empty");
 		Assert.hasText(alias, "'alias' must not be empty");
+		//加锁，防止并发
 		synchronized (this.aliasMap) {
+			//如果别名和bean名称相同的话不允许注册
 			if (alias.equals(name)) {
 				this.aliasMap.remove(alias);
 				if (logger.isDebugEnabled()) {
 					logger.debug("Alias definition '" + alias + "' ignored since it points to same name");
 				}
-			}
-			else {
+			}else {
 				String registeredName = this.aliasMap.get(alias);
 				if (registeredName != null) {
+					//如果别名已经注册过的话，跳过重复注册
 					if (registeredName.equals(name)) {
 						// An existing alias - no need to re-register
 						return;
@@ -75,6 +77,7 @@ public class SimpleAliasRegistry implements AliasRegistry {
 								registeredName + "' with new target name '" + name + "'");
 					}
 				}
+				//检查别名是否有循环注册
 				checkForAliasCircle(name, alias);
 				this.aliasMap.put(alias, name);
 				if (logger.isDebugEnabled()) {
@@ -93,6 +96,14 @@ public class SimpleAliasRegistry implements AliasRegistry {
 	}
 
 	/**
+	 * 该方法是检查别名是否会循环注册
+	 *
+	 * 如：下面这种情况会抛出异常
+	 * 		key(别名) ：value（实际名称）
+	 * 		A   :	student
+	 * 		B	：	student
+	 * 		A	:	B
+	 * 		B   : 	A
 	 * Determine whether the given name has the given alias registered.
 	 * @param name the name to check
 	 * @param alias the alias to look for

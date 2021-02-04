@@ -296,7 +296,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 				}
 			}
 
-			//标注当前bean正在被创建
+			//在真正开始创建bean之前，记录当前bean正在被创建
 			if (!typeCheckOnly) {
 				markBeanAsCreated(beanName);
 			}
@@ -1573,12 +1573,15 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 	 * 标记指定的bean已经被创建或者将要被创建
 	 */
 	protected void markBeanAsCreated(String beanName) {
+		//检查该bean是否在创建
 		if (!this.alreadyCreated.contains(beanName)) {
 			synchronized (this.mergedBeanDefinitions) {
+				//加锁再次检查
 				if (!this.alreadyCreated.contains(beanName)) {
 					// Let the bean definition get re-merged now that we're actually creating
 					// the bean... just in case some of its metadata changed in the meantime.
 					clearMergedBeanDefinition(beanName); //移除mergedBeanDefinitions中的bean定义
+					//标记当前bean正在被创建，记录bean名称到集合中
 					this.alreadyCreated.add(beanName);
 				}
 			}
@@ -1668,6 +1671,7 @@ public abstract class AbstractBeanFactory extends FactoryBeanRegistrySupport imp
 		Object object = null;
 		//先尝试从缓存中获取实例
 		if (mbd == null) {
+			//先从缓存取factoryBean
 			object = getCachedObjectForFactoryBean(beanName);
 		}
 		if (object == null) {

@@ -16,6 +16,7 @@ public class ApplicationContextLoadTest {
 		String rpcCall = rpcService.rpcCall();
 		System.out.println(rpcCall);
 
+
 	}
 
 

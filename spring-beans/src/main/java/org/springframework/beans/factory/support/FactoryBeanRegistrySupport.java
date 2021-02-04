@@ -43,12 +43,17 @@ import org.springframework.lang.Nullable;
  */
 public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanRegistry {
 
-	/** Cache of singleton objects created by FactoryBeans: FactoryBean name --> object */
+	/**
+	 * Cache of singleton objects created by FactoryBeans: FactoryBean name --> object
+	 */
+	//用于缓存factoryBean调用getObject方法产生的对象（前提是对象的类型是单例的）
 	private final Map<String, Object> factoryBeanObjectCache = new ConcurrentHashMap<>(16);
 
 
 	/**
+	 * 返回factoryBean产生的对象类型
 	 * Determine the type for the given FactoryBean.
+	 *
 	 * @param factoryBean the FactoryBean instance to check
 	 * @return the FactoryBean's object type,
 	 * or {@code null} if the type cannot be determined yet
@@ -59,12 +64,10 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 			if (System.getSecurityManager() != null) {
 				return AccessController.doPrivileged((PrivilegedAction<Class<?>>)
 						factoryBean::getObjectType, getAccessControlContext());
-			}
-			else {
+			} else {
 				return factoryBean.getObjectType();
 			}
-		}
-		catch (Throwable ex) {
+		} catch (Throwable ex) {
 			// Thrown from the FactoryBean's getObjectType implementation.
 			logger.warn("FactoryBean threw exception from getObjectType, despite the contract saying " +
 					"that it should return null if the type of its object cannot be determined yet", ex);
@@ -75,6 +78,7 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 	/**
 	 * Obtain an object to expose from the given FactoryBean, if available
 	 * in cached form. Quick check for minimal synchronization.
+	 *
 	 * @param beanName the name of the bean
 	 * @return the object obtained from the FactoryBean,
 	 * or {@code null} if not available
@@ -86,29 +90,33 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 
 	/**
 	 * Obtain an object to expose from the given FactoryBean.
-	 * @param factory the FactoryBean instance
-	 * @param beanName the name of the bean
+	 *
+	 * @param factory           the FactoryBean instance
+	 * @param beanName          the name of the bean
 	 * @param shouldPostProcess whether the bean is subject to post-processing
 	 * @return the object obtained from the FactoryBean
 	 * @throws BeanCreationException if FactoryBean object creation failed
 	 * @see org.springframework.beans.factory.FactoryBean#getObject()
 	 */
 	protected Object getObjectFromFactoryBean(FactoryBean<?> factory, String beanName, boolean shouldPostProcess) {
-		//判断一下是否是单例的bean
+		//第一个条件判断一下factoryBean对象本身是否是单例的
+		//第二个条件判断的是factoryBean产生的对象是否是单例的
 		if (factory.isSingleton() && containsSingleton(beanName)) {
 			synchronized (getSingletonMutex()) { //程序到这里已经说明了是单例的，使用singletonObjects做同步锁
 				//从缓存中获取
 				Object object = this.factoryBeanObjectCache.get(beanName);
+				//缓存中不存在对象的话就通过factoryBean对象创建一个新的对象
 				if (object == null) {
-					//通过factoryBean创建bean
+					//通过factoryBean的getObject创建代理对象
 					object = doGetObjectFromFactoryBean(factory, beanName);
 					// Only post-process and store if not put there already during getObject() call above
 					// (e.g. because of circular reference processing triggered by custom getBean calls)
+					//再一次判断一下缓存中有没有存在该对象，如果存在的话以缓存中的为准
 					Object alreadyThere = this.factoryBeanObjectCache.get(beanName);
 					if (alreadyThere != null) {
 						object = alreadyThere;
-					}
-					else {
+					} else {
+						//是否需要后置处理器对对象进行增强处理
 						if (shouldPostProcess) {
 							if (isSingletonCurrentlyInCreation(beanName)) {
 								// Temporarily return non-post-processed object, not storing it yet..
@@ -118,15 +126,14 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 							try {
 								//调用后置处理器处理bean
 								object = postProcessObjectFromFactoryBean(object, beanName);
-							}
-							catch (Throwable ex) {
+							} catch (Throwable ex) {
 								throw new BeanCreationException(beanName,
 										"Post-processing of FactoryBean's singleton object failed", ex);
-							}
-							finally {
+							} finally {
 								afterSingletonCreation(beanName);
 							}
 						}
+						//factoryBean产生的对象如果是单例的话会把它添加到缓存中
 						if (containsSingleton(beanName)) {
 							this.factoryBeanObjectCache.put(beanName, object);
 						}
@@ -134,14 +141,15 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 				}
 				return object;
 			}
-		}
-		else {
+		} else {
+			//如果不是单例的话直接获取对象返回
 			Object object = doGetObjectFromFactoryBean(factory, beanName);
+			//是否需要后置增强处理
 			if (shouldPostProcess) {
 				try {
+					//调用后置处理器增强处理
 					object = postProcessObjectFromFactoryBean(object, beanName);
-				}
-				catch (Throwable ex) {
+				} catch (Throwable ex) {
 					throw new BeanCreationException(beanName, "Post-processing of FactoryBean's object failed", ex);
 				}
 			}
@@ -151,7 +159,8 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 
 	/**
 	 * Obtain an object to expose from the given FactoryBean.
-	 * @param factory the FactoryBean instance
+	 *
+	 * @param factory  the FactoryBean instance
 	 * @param beanName the name of the bean
 	 * @return the object obtained from the FactoryBean
 	 * @throws BeanCreationException if FactoryBean object creation failed
@@ -167,20 +176,16 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 				AccessControlContext acc = getAccessControlContext();
 				try {
 					object = AccessController.doPrivileged((PrivilegedExceptionAction<Object>) factory::getObject, acc);
-				}
-				catch (PrivilegedActionException pae) {
+				} catch (PrivilegedActionException pae) {
 					throw pae.getException();
 				}
-			}
-			else {
+			} else {
 				//这里就是调用factoryBean中的getObject方法创建bean
 				object = factory.getObject();
 			}
-		}
-		catch (FactoryBeanNotInitializedException ex) {
+		} catch (FactoryBeanNotInitializedException ex) {
 			throw new BeanCurrentlyInCreationException(beanName, ex.toString());
-		}
-		catch (Throwable ex) {
+		} catch (Throwable ex) {
 			throw new BeanCreationException(beanName, "FactoryBean threw exception on object creation", ex);
 		}
 
@@ -201,7 +206,8 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 	 * The resulting object will get exposed for bean references.
 	 * <p>The default implementation simply returns the given object as-is.
 	 * Subclasses may override this, for example, to apply post-processors.
-	 * @param object the object obtained from the FactoryBean.
+	 *
+	 * @param object   the object obtained from the FactoryBean.
 	 * @param beanName the name of the bean
 	 * @return the object to expose
 	 * @throws org.springframework.beans.BeansException if any post-processing failed
@@ -212,7 +218,8 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 
 	/**
 	 * Get a FactoryBean for the given bean if possible.
-	 * @param beanName the name of the bean
+	 *
+	 * @param beanName     the name of the bean
 	 * @param beanInstance the corresponding bean instance
 	 * @return the bean instance as FactoryBean
 	 * @throws BeansException if the given bean cannot be exposed as a FactoryBean
@@ -251,6 +258,7 @@ public abstract class FactoryBeanRegistrySupport extends DefaultSingletonBeanReg
 	 * Return the security context for this bean factory. If a security manager
 	 * is set, interaction with the user code will be executed using the privileged
 	 * of the security context returned by this method.
+	 *
 	 * @see AccessController#getContext()
 	 */
 	protected AccessControlContext getAccessControlContext() {

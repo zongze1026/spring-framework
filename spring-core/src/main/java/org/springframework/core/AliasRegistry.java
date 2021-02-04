@@ -53,6 +53,7 @@ public interface AliasRegistry {
 	boolean isAlias(String name);
 
 	/**
+	 * 通过给定的名称返回所有的别名
 	 * Return the aliases for the given name, if defined.
 	 * @param name the name to check for aliases
 	 * @return the aliases, or an empty array if none
