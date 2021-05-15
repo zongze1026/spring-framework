@@ -109,12 +109,12 @@ public class ReflectiveMethodInvocation implements ProxyMethodInvocation, Clonea
 			Object proxy, @Nullable Object target, Method method, @Nullable Object[] arguments,
 			@Nullable Class<?> targetClass, List<Object> interceptorsAndDynamicMethodMatchers) {
 
-		this.proxy = proxy;
-		this.target = target;
-		this.targetClass = targetClass;
-		this.method = BridgeMethodResolver.findBridgedMethod(method);
-		this.arguments = AopProxyUtils.adaptArgumentsIfNecessary(method, arguments);
-		this.interceptorsAndDynamicMethodMatchers = interceptorsAndDynamicMethodMatchers;
+		this.proxy = proxy; //代理对象
+		this.target = target; //目标对象
+		this.targetClass = targetClass; //目标类class对象
+		this.method = BridgeMethodResolver.findBridgedMethod(method); //目标方法对象
+		this.arguments = AopProxyUtils.adaptArgumentsIfNecessary(method, arguments); //目标方法
+		this.interceptorsAndDynamicMethodMatchers = interceptorsAndDynamicMethodMatchers; //匹配器（包含链接点匹配和advice）
 	}
 
 

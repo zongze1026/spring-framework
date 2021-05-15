@@ -30,6 +30,9 @@ import org.aopalliance.aop.Advice;
 @SuppressWarnings("serial")
 public abstract class AbstractGenericPointcutAdvisor extends AbstractPointcutAdvisor {
 
+
+	//每个 advisor 内部持有 advice 实例，advisor 负责匹配，内部的 advice 负责实现拦截处理。配置了各个 advisor后，
+	// 配置 DefaultAdvisorAutoProxyCreator 使得所有的 advisor 配置自动生效。
 	private Advice advice = EMPTY_ADVICE;
 
 

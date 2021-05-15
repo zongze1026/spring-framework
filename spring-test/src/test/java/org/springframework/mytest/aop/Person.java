@@ -7,4 +7,6 @@ public interface Person {
 
 	String sayName();
 
+	Integer sayAge();
+
 }
