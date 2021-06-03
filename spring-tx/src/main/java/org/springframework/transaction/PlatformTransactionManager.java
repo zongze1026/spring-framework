@@ -32,13 +32,15 @@ import org.springframework.lang.Nullable;
  * of transaction synchronization handling. Subclasses have to implement
  * template methods for specific states of the underlying transaction,
  * for example: begin, suspend, resume, commit.
- * 子类只需要继承抽象的事务管理器{@link org.springframework.transaction.support.AbstractPlatformTransactionManager}
- * 然后重写其中的模板方法即可
+ * 对于实现者，建议从提供的AbstractPlatformTransactionManager 类派生， 该类预先实现定义的传播行为并负责事务同步处理。子类必须为底层事务的特定状态实现模板方法，例如：开始、暂停、恢复、提交。
+ *
  *
  * <p>The default implementations of this strategy interface are
  * {@link org.springframework.transaction.jta.JtaTransactionManager} and
  * {@link org.springframework.jdbc.datasource.DataSourceTransactionManager},
  * which can serve as an implementation guide for other transaction strategies.
+ *
+ * 该策略接口的默认实现是 JtaTransactionManager和 DataSourceTransactionManager，可以作为其他事务策略的实现指南。
  *
  * @author Rod Johnson
  * @author Juergen Hoeller
@@ -70,6 +72,9 @@ public interface PlatformTransactionManager {
 	 * @see TransactionDefinition#getIsolationLevel
 	 * @see TransactionDefinition#getTimeout
 	 * @see TransactionDefinition#isReadOnly
+	 *
+	 * 根据指定的传播行为，返回当前活动的事务或创建一个新事务。
+	 *
 	 */
 	TransactionStatus getTransaction(@Nullable TransactionDefinition definition)
 			throws TransactionException;
@@ -100,6 +105,8 @@ public interface PlatformTransactionManager {
 	 * @throws IllegalTransactionStateException if the given transaction
 	 * is already completed (that is, committed or rolled back)
 	 * @see TransactionStatus#setRollbackOnly
+	 *
+	 * 提交指定的事务
 	 */
 	void commit(TransactionStatus status) throws TransactionException;
 
@@ -118,6 +125,8 @@ public interface PlatformTransactionManager {
 	 * (typically caused by fundamental resource failures)
 	 * @throws IllegalTransactionStateException if the given transaction
 	 * is already completed (that is, committed or rolled back)
+	 *
+	 * 执行给定事务的回滚。
 	 */
 	void rollback(TransactionStatus status) throws TransactionException;
 

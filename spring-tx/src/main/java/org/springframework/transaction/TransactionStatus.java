@@ -20,14 +20,19 @@ import java.io.Flushable;
 
 /**
  * Representation of the status of a transaction.
+ * 标识一个事务的状态
  *
  * <p>Transactional code can use this to retrieve status information,
  * and to programmatically request a rollback (instead of throwing
  * an exception that causes an implicit rollback).
  *
+ * 事务代码可以使用它来检索状态信息，并以编程方式请求回滚（而不是抛出导致隐式回滚的异常）。
+ *
  * <p>Includes the {@link SavepointManager} interface to provide access
  * to savepoint management facilities. Note that savepoint management
  * is only available if supported by the underlying transaction manager.
+ *
+ * 包括SavepointManager提供对保存点管理工具的访问的界面。请注意，保存点管理仅在底层事务管理器支持时才可用
  *
  * @author Juergen Hoeller
  * @since 27.03.2003
@@ -42,6 +47,9 @@ public interface TransactionStatus extends SavepointManager, Flushable {
 	 * Return whether the present transaction is new; otherwise participating
 	 * in an existing transaction, or potentially not running in an actual
 	 * transaction in the first place.
+	 *
+	 * 返回当前事务是否是一个新的事务
+	 *
 	 */
 	boolean isNewTransaction();
 
@@ -55,6 +63,9 @@ public interface TransactionStatus extends SavepointManager, Flushable {
 	 * @see #createSavepoint()
 	 * @see #rollbackToSavepoint(Object)
 	 * @see #releaseSavepoint(Object)
+	 *
+	 * 返回此事务内部是否带有保存点，即是否已创建为基于保存点的嵌套事务。
+	 *
 	 */
 	boolean hasSavepoint();
 

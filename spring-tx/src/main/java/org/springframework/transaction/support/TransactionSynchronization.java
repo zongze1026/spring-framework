@@ -38,12 +38,15 @@ import java.io.Flushable;
 public interface TransactionSynchronization extends Flushable {
 
 	/** Completion status in case of proper commit */
+	//正确提交时的完成状态
 	int STATUS_COMMITTED = 0;
 
 	/** Completion status in case of proper rollback */
+	//正确回滚时的完成状态
 	int STATUS_ROLLED_BACK = 1;
 
 	/** Completion status in case of heuristic mixed completion or system errors */
+	//在启发式混合完成或系统错误的情况下的完成状态
 	int STATUS_UNKNOWN = 2;
 
 
@@ -85,6 +88,8 @@ public interface TransactionSynchronization extends Flushable {
 	 * @throws RuntimeException in case of errors; will be <b>propagated to the caller</b>
 	 * (note: do not throw TransactionException subclasses here!)
 	 * @see #beforeCompletion
+	 *
+	 * 在事务提交之前调用（在“beforeCompletion”之前）
 	 */
 	default void beforeCommit(boolean readOnly) {
 	}
@@ -99,6 +104,8 @@ public interface TransactionSynchronization extends Flushable {
 	 * (note: do not throw TransactionException subclasses here!)
 	 * @see #beforeCommit
 	 * @see #afterCompletion
+	 *
+	 * 在事务提交/回滚之前调用
 	 */
 	default void beforeCompletion() {
 	}
@@ -117,6 +124,8 @@ public interface TransactionSynchronization extends Flushable {
 	 * transactional operation that is called from here.</b>
 	 * @throws RuntimeException in case of errors; will be <b>propagated to the caller</b>
 	 * (note: do not throw TransactionException subclasses here!)
+	 *
+	 * 在事务提交后调用
 	 */
 	default void afterCommit() {
 	}
@@ -138,6 +147,8 @@ public interface TransactionSynchronization extends Flushable {
 	 * @see #STATUS_ROLLED_BACK
 	 * @see #STATUS_UNKNOWN
 	 * @see #beforeCompletion
+	 *
+	 * 在事务提交/回滚后调用
 	 */
 	default void afterCompletion(int status) {
 	}

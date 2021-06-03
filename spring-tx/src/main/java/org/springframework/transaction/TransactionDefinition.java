@@ -24,6 +24,8 @@ import org.springframework.lang.Nullable;
  * Interface that defines Spring-compliant transaction properties.
  * Based on the propagation behavior definitions analogous to EJB CMT attributes.
  *
+ * 定义了事务传播行为的属性
+ *
  * <p>Note that isolation level and timeout settings will not get applied unless
  * an actual new transaction gets started. As only {@link #PROPAGATION_REQUIRED},
  * {@link #PROPAGATION_REQUIRES_NEW} and {@link #PROPAGATION_NESTED} can cause
@@ -79,12 +81,17 @@ public interface TransactionDefinition {
 	 * exists. Analogous to the EJB transaction attribute of the same name.
 	 * <p>Note that transaction synchronization within a {@code PROPAGATION_MANDATORY}
 	 * scope will always be driven by the surrounding transaction.
+	 *
+	 * 支持当前的事务操作，如果当前操作不存在事务则抛出异常
+	 *
 	 */
 	int PROPAGATION_MANDATORY = 2;
 
 	/**
 	 * Create a new transaction, suspending the current transaction if one exists.
 	 * Analogous to the EJB transaction attribute of the same name.
+	 * 创建一个新的事务，如果当前存在事务则挂起当前事务
+	 *
 	 * <p><b>NOTE:</b> Actual transaction suspension will not work out-of-the-box
 	 * on all transaction managers. This in particular applies to
 	 * {@link org.springframework.transaction.jta.JtaTransactionManager},
@@ -100,6 +107,8 @@ public interface TransactionDefinition {
 	/**
 	 * Do not support a current transaction; rather always execute non-transactionally.
 	 * Analogous to the EJB transaction attribute of the same name.
+	 * 不支持当前事务，如果存在事务则挂起
+	 *
 	 * <p><b>NOTE:</b> Actual transaction suspension will not work out-of-the-box
 	 * on all transaction managers. This in particular applies to
 	 * {@link org.springframework.transaction.jta.JtaTransactionManager},
@@ -117,6 +126,9 @@ public interface TransactionDefinition {
 	 * exists. Analogous to the EJB transaction attribute of the same name.
 	 * <p>Note that transaction synchronization is <i>not</i> available within a
 	 * {@code PROPAGATION_NEVER} scope.
+	 *
+	 * 当前不支持事务，如果存在事务则抛出异常
+	 *
 	 */
 	int PROPAGATION_NEVER = 5;
 
@@ -138,6 +150,8 @@ public interface TransactionDefinition {
 	 * Use the default isolation level of the underlying datastore.
 	 * All other levels correspond to the JDBC isolation levels.
 	 * @see java.sql.Connection
+	 *
+	 * 使用底层数据库默认的隔离级别
 	 */
 	int ISOLATION_DEFAULT = -1;
 
@@ -200,6 +214,8 @@ public interface TransactionDefinition {
 	 * @return the propagation behavior
 	 * @see #PROPAGATION_REQUIRED
 	 * @see org.springframework.transaction.support.TransactionSynchronizationManager#isActualTransactionActive()
+	 *
+	 * 返回事务的传播行为，这些传播行为在其父类{@link TransactionDefinition}中定义
 	 */
 	int getPropagationBehavior();
 
