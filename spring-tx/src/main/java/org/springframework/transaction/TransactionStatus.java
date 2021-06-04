@@ -102,6 +102,9 @@ public interface TransactionStatus extends SavepointManager, Flushable {
 	/**
 	 * Return whether this transaction is completed, that is,
 	 * whether it has already been committed or rolled back.
+	 *
+	 * 标识一个事务是否已经完成，事务被提交或者已经回滚
+	 *
 	 * @see PlatformTransactionManager#commit
 	 * @see PlatformTransactionManager#rollback
 	 */

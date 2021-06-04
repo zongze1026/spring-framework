@@ -38,6 +38,8 @@ public interface SmartTransactionObject extends Flushable {
 	 * Can, for example, check the JTA UserTransaction.
 	 * @see javax.transaction.UserTransaction#getStatus
 	 * @see javax.transaction.Status#STATUS_MARKED_ROLLBACK
+	 *
+	 * 返回boolean值，表示是否内部表示为回滚状态
 	 */
 	boolean isRollbackOnly();
 

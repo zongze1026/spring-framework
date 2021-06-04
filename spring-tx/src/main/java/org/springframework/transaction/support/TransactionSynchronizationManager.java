@@ -141,6 +141,8 @@ public abstract class TransactionSynchronizationManager {
 	 * @return a value bound to the current thread (usually the active
 	 * resource object), or {@code null} if none
 	 * @see ResourceTransactionManager#getResourceFactory()
+	 *
+	 * 检测当前的dataSource是否绑定到当前的线程
 	 */
 	@Nullable
 	public static Object getResource(Object key) {
@@ -243,8 +245,10 @@ public abstract class TransactionSynchronizationManager {
 		if (map == null) {
 			return null;
 		}
+		//从threadLocal中移除datasource
 		Object value = map.remove(actualKey);
 		// Remove entire ThreadLocal if empty...
+		//判断移除空map
 		if (map.isEmpty()) {
 			resources.remove();
 		}
@@ -268,6 +272,8 @@ public abstract class TransactionSynchronizationManager {
 	 * Return if transaction synchronization is active for the current thread.
 	 * Can be called before register to avoid unnecessary instance creation.
 	 * @see #registerSynchronization
+	 *
+	 *
 	 */
 	public static boolean isSynchronizationActive() {
 		return (synchronizations.get() != null);

@@ -52,6 +52,8 @@ public interface TransactionDefinition {
 	 * Analogous to the EJB transaction attribute of the same name.
 	 * <p>This is typically the default setting of a transaction definition,
 	 * and typically defines a transaction synchronization scope.
+	 *
+	 * 当前需要事务，如果不存在则创建一个事务
 	 */
 	int PROPAGATION_REQUIRED = 0;
 
@@ -73,6 +75,8 @@ public interface TransactionDefinition {
 	 * "synchronization on actual transaction").
 	 * @see org.springframework.transaction.support.AbstractPlatformTransactionManager#setTransactionSynchronization
 	 * @see org.springframework.transaction.support.AbstractPlatformTransactionManager#SYNCHRONIZATION_ON_ACTUAL_TRANSACTION
+	 *
+	 * 支持当前交易；如果不存在则以非事务方式执行
 	 */
 	int PROPAGATION_SUPPORTS = 1;
 
@@ -101,6 +105,9 @@ public interface TransactionDefinition {
 	 * transaction synchronizations. Existing synchronizations will be suspended
 	 * and resumed appropriately.
 	 * @see org.springframework.transaction.jta.JtaTransactionManager#setTransactionManager
+	 *
+	 * 当前需要事务，如果没有创建一个新的事务，如果存在事务则挂起当前事务
+	 *
 	 */
 	int PROPAGATION_REQUIRES_NEW = 3;
 
@@ -118,6 +125,8 @@ public interface TransactionDefinition {
 	 * {@code PROPAGATION_NOT_SUPPORTED} scope. Existing synchronizations
 	 * will be suspended and resumed appropriately.
 	 * @see org.springframework.transaction.jta.JtaTransactionManager#setTransactionManager
+	 *
+	 * 当前不支持事务操作，如果当前存在事务则挂起事务
 	 */
 	int PROPAGATION_NOT_SUPPORTED = 4;
 
@@ -142,6 +151,8 @@ public interface TransactionDefinition {
 	 * when working on a JDBC 3.0 driver. Some JTA providers might support
 	 * nested transactions as well.
 	 * @see org.springframework.jdbc.datasource.DataSourceTransactionManager
+	 *
+	 * 如果当前事务存在，则在嵌套事务中执行，否则开启一个新的事务
 	 */
 	int PROPAGATION_NESTED = 6;
 
@@ -163,6 +174,7 @@ public interface TransactionDefinition {
 	 * If any of the changes are rolled back, the second transaction will have
 	 * retrieved an invalid row.
 	 * @see java.sql.Connection#TRANSACTION_READ_UNCOMMITTED
+	 * 读未提交：表示可能发生脏读、不可重复读和幻读
 	 */
 	int ISOLATION_READ_UNCOMMITTED = Connection.TRANSACTION_READ_UNCOMMITTED;
 
@@ -172,6 +184,9 @@ public interface TransactionDefinition {
 	 * <p>This level only prohibits a transaction from reading a row
 	 * with uncommitted changes in it.
 	 * @see java.sql.Connection#TRANSACTION_READ_COMMITTED
+	 *
+	 * 读已提交：表示防止脏读，可能发生不可重复读和幻读
+	 *
 	 */
 	int ISOLATION_READ_COMMITTED = Connection.TRANSACTION_READ_COMMITTED;
 
@@ -183,6 +198,8 @@ public interface TransactionDefinition {
 	 * a second transaction alters the row, and the first transaction re-reads the row,
 	 * getting different values the second time (a "non-repeatable read").
 	 * @see java.sql.Connection#TRANSACTION_REPEATABLE_READ
+	 *
+	 * 可重复读：表示防止脏读和不可重复读；可能会发生幻读
 	 */
 	int ISOLATION_REPEATABLE_READ = Connection.TRANSACTION_REPEATABLE_READ;
 
@@ -196,6 +213,8 @@ public interface TransactionDefinition {
 	 * re-reads for the same condition, retrieving the additional "phantom" row
 	 * in the second read.
 	 * @see java.sql.Connection#TRANSACTION_SERIALIZABLE
+	 *
+	 * 串行化：表示防止脏读、不可重复读和幻读
 	 */
 	int ISOLATION_SERIALIZABLE = Connection.TRANSACTION_SERIALIZABLE;
 
@@ -203,6 +222,8 @@ public interface TransactionDefinition {
 	/**
 	 * Use the default timeout of the underlying transaction system,
 	 * or none if timeouts are not supported.
+	 *
+	 * 过期时间
 	 */
 	int TIMEOUT_DEFAULT = -1;
 
@@ -235,6 +256,8 @@ public interface TransactionDefinition {
 	 * @return the isolation level
 	 * @see #ISOLATION_DEFAULT
 	 * @see org.springframework.transaction.support.AbstractPlatformTransactionManager#setValidateExistingTransaction
+	 *
+	 * 获取事务的隔离级别
 	 */
 	int getIsolationLevel();
 
@@ -247,6 +270,8 @@ public interface TransactionDefinition {
 	 * <p>Note that a transaction manager that does not support timeouts will throw
 	 * an exception when given any other timeout than {@link #TIMEOUT_DEFAULT}.
 	 * @return the transaction timeout
+	 *
+	 * 获取超时时间
 	 */
 	int getTimeout();
 
@@ -265,6 +290,7 @@ public interface TransactionDefinition {
 	 * @return {@code true} if the transaction is to be optimized as read-only
 	 * @see org.springframework.transaction.support.TransactionSynchronization#beforeCommit(boolean)
 	 * @see org.springframework.transaction.support.TransactionSynchronizationManager#isCurrentTransactionReadOnly()
+	 * 返回是否优化成只读事务
 	 */
 	boolean isReadOnly();
 
@@ -277,6 +303,8 @@ public interface TransactionDefinition {
 	 * @return the name of this transaction
 	 * @see org.springframework.transaction.interceptor.TransactionAspectSupport
 	 * @see org.springframework.transaction.support.TransactionSynchronizationManager#getCurrentTransactionName()
+	 *
+	 * 返回事务名称
 	 */
 	@Nullable
 	String getName();

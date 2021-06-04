@@ -103,9 +103,12 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 	 * Always activate transaction synchronization, even for "empty" transactions
 	 * that result from PROPAGATION_SUPPORTS with no existing backend transaction.
 	 *
+	 * 始终激活事务同步，即使对于没有现有后端事务的 PROPAGATION_SUPPORTS 产生的“空”事务也是如此
+	 *
 	 * @see org.springframework.transaction.TransactionDefinition#PROPAGATION_SUPPORTS
 	 * @see org.springframework.transaction.TransactionDefinition#PROPAGATION_NOT_SUPPORTED
 	 * @see org.springframework.transaction.TransactionDefinition#PROPAGATION_NEVER
+	 *
 	 */
 	public static final int SYNCHRONIZATION_ALWAYS = 0;
 
@@ -113,6 +116,8 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 	 * Activate transaction synchronization only for actual transactions,
 	 * that is, not for empty ones that result from PROPAGATION_SUPPORTS with
 	 * no existing backend transaction.
+	 *
+	 * 仅为实际事务激活事务同步，即不为 ​​PROPAGATION_SUPPORTS 导致没有现有后端事务的空事务激活事务同步
 	 *
 	 * @see org.springframework.transaction.TransactionDefinition#PROPAGATION_REQUIRED
 	 * @see org.springframework.transaction.TransactionDefinition#PROPAGATION_MANDATORY
@@ -122,8 +127,8 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 
 	/**
 	 * Never active transaction synchronization, not even for actual transactions.
-	 * <p>
-	 * 不进行事务同步
+	 *
+	 * 不进行事务同步，即使是实际事务也不行
 	 */
 	public static final int SYNCHRONIZATION_NEVER = 2;
 
@@ -140,6 +145,7 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 
 	private int defaultTimeout = TransactionDefinition.TIMEOUT_DEFAULT;
 
+	//是否允许嵌套事务
 	private boolean nestedTransactionAllowed = false;
 
 	private boolean validateExistingTransaction = false;
@@ -536,7 +542,7 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 				}
 			}
 		}
-		// 到这里PROPAGATION_SUPPORTS 或 PROPAGATION_REQUIRED或PROPAGATION_MANDATORY，存在事务加入事务即可，prepareTransactionStatus方法第三个参数就是是否需要新事务。false代表不需要新事物
+		// 到这里PROPAGATION_SUPPORTS 或 PROPAGATION_REQUIRED或PROPAGATION_MANDATORY，存在事务加入事务即可，prepareTransactionStatus方法第三个参数就是是否需要新事务。false代表不需要新事务
 		boolean newSynchronization = (getTransactionSynchronization() != SYNCHRONIZATION_NEVER);
 		return prepareTransactionStatus(definition, transaction, false, newSynchronization, debugEnabled, null);
 	}
@@ -608,7 +614,7 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 	/**
 	 * Suspend the given transaction. Suspends transaction synchronization first,
 	 * then delegates to the {@code doSuspend} template method.
-	 * <p>
+	 *
 	 * 挂起指定的事务，首先挂起事务同步；然后委派给模板方法{@code doSuspend}
 	 *
 	 * @param transaction the current transaction object
@@ -645,7 +651,7 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 				doResumeSynchronization(suspendedSynchronizations);
 				throw ex;
 			}
-			// 2.没有同步但，事务不为空，挂起事务
+			// 2.没有同步,但事务不为空，挂起事务
 		} else if (transaction != null) {
 			// Transaction active but no synchronization active.
 			Object suspendedResources = doSuspend(transaction);
@@ -747,16 +753,19 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 	 */
 	@Override
 	public final void commit(TransactionStatus status) throws TransactionException {
+		//如果事务已经完成抛出异常
 		if (status.isCompleted()) {
 			throw new IllegalTransactionStateException(
 					"Transaction is already completed - do not call commit or rollback more than once per transaction");
 		}
 
 		DefaultTransactionStatus defStatus = (DefaultTransactionStatus) status;
+		// 如果事务明确标记为回滚
 		if (defStatus.isLocalRollbackOnly()) {
 			if (defStatus.isDebug()) {
 				logger.debug("Transactional code has requested rollback");
 			}
+			//处理回滚
 			processRollback(defStatus, false);
 			return;
 		}
@@ -769,6 +778,7 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 			return;
 		}
 
+		//处理提交
 		processCommit(defStatus);
 	}
 
@@ -776,31 +786,39 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 	 * Process an actual commit.
 	 * Rollback-only flags have already been checked and applied.
 	 *
+	 * 处理实际提交；回滚标识已经全部被检查和处理
+	 *
 	 * @param status object representing the transaction
 	 * @throws TransactionException in case of commit failure
 	 */
 	private void processCommit(DefaultTransactionStatus status) throws TransactionException {
 		try {
+			//记录提交前一些列前置操作是否完成；主要是:triggerBeforeCommit(status)和triggerBeforeCompletion(status);
 			boolean beforeCompletionInvoked = false;
 
 			try {
 				boolean unexpectedRollback = false;
+				//以下是三个前置操作
 				prepareForCommit(status);
 				triggerBeforeCommit(status);
 				triggerBeforeCompletion(status);
+				//记录前置操作已经完成
 				beforeCompletionInvoked = true;
 
+				//有保存点是嵌套事务
 				if (status.hasSavepoint()) {
 					if (status.isDebug()) {
 						logger.debug("Releasing transaction savepoint");
 					}
 					unexpectedRollback = status.isGlobalRollbackOnly();
+					//释放保存点
 					status.releaseHeldSavepoint();
-				} else if (status.isNewTransaction()) {
+				} else if (status.isNewTransaction()) { //如果是新事务的话直接提交
 					if (status.isDebug()) {
 						logger.debug("Initiating transaction commit");
 					}
 					unexpectedRollback = status.isGlobalRollbackOnly();
+					//调用事务处理器提交事务
 					doCommit(status);
 				} else if (isFailEarlyOnGlobalRollbackOnly()) {
 					unexpectedRollback = status.isGlobalRollbackOnly();

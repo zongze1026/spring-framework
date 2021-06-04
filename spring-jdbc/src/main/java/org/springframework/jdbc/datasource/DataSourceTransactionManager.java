@@ -236,7 +236,7 @@ public class DataSourceTransactionManager extends AbstractPlatformTransactionMan
 	@Override
 	protected Object doGetTransaction() {
 		DataSourceTransactionObject txObject = new DataSourceTransactionObject();
-		txObject.setSavepointAllowed(isNestedTransactionAllowed());
+		txObject.setSavepointAllowed(isNestedTransactionAllowed());//设置是否允许嵌套事务
 		ConnectionHolder conHolder =
 				(ConnectionHolder) TransactionSynchronizationManager.getResource(obtainDataSource());
 		txObject.setConnectionHolder(conHolder, false);
@@ -436,6 +436,9 @@ public class DataSourceTransactionManager extends AbstractPlatformTransactionMan
 	/**
 	 * DataSource transaction object, representing a ConnectionHolder.
 	 * Used as transaction object by DataSourceTransactionManager.
+	 *
+	 * 该类是DataSourceTransactionManager的内部类，里面封装了Connect连接以及保存点等
+	 *
 	 */
 	private static class DataSourceTransactionObject extends JdbcTransactionObjectSupport {
 
