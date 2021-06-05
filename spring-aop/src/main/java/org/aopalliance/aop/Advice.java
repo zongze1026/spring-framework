@@ -22,6 +22,10 @@ package org.aopalliance.aop;
  *
  * @author Rod Johnson
  * @version $Id: Advice.java,v 1.1 2004/03/19 17:02:16 johnsonr Exp $
+ *
+ *
+ * 标志性接口，表示增强切面类
+ *
  */
 public interface Advice {
 
