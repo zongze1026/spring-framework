@@ -150,6 +150,8 @@ public abstract class AbstractTransactionStatus implements TransactionStatus {
 	/**
 	 * Roll back to the savepoint that is held for the transaction
 	 * and release the savepoint right afterwards.
+	 *
+	 * 回滚到为事务保存的保存点，然后立即释放保存点
 	 */
 	public void rollbackToHeldSavepoint() throws TransactionException {
 		Object savepoint = getSavepoint();
@@ -157,8 +159,10 @@ public abstract class AbstractTransactionStatus implements TransactionStatus {
 			throw new TransactionUsageException(
 					"Cannot roll back to savepoint - no savepoint associated with current transaction");
 		}
+		//通过数据源连接回滚值保存点
 		getSavepointManager().rollbackToSavepoint(savepoint);
 		getSavepointManager().releaseSavepoint(savepoint);
+		//释放保存点
 		setSavepoint(null);
 	}
 

@@ -217,6 +217,7 @@ public abstract class TransactionSynchronizationManager {
 	 */
 	public static Object unbindResource(Object key) throws IllegalStateException {
 		Object actualKey = TransactionSynchronizationUtils.unwrapResourceIfNecessary(key);
+		//移除ThreadLocal中的数据源连接
 		Object value = doUnbindResource(actualKey);
 		if (value == null) {
 			throw new IllegalStateException(
@@ -323,6 +324,7 @@ public abstract class TransactionSynchronizationManager {
 	 * @see TransactionSynchronization
 	 */
 	public static List<TransactionSynchronization> getSynchronizations() throws IllegalStateException {
+		//从当前线程中获取出同步回调接口
 		Set<TransactionSynchronization> synchs = synchronizations.get();
 		if (synchs == null) {
 			throw new IllegalStateException("Transaction synchronization is not active");
@@ -330,11 +332,13 @@ public abstract class TransactionSynchronizationManager {
 		// Return unmodifiable snapshot, to avoid ConcurrentModificationExceptions
 		// while iterating and invoking synchronization callbacks that in turn
 		// might register further synchronizations.
+		//不存在回调接口的话返回空集合
 		if (synchs.isEmpty()) {
 			return Collections.emptyList();
 		}
 		else {
 			// Sort lazily here, not in registerSynchronization.
+			//排序并返回
 			List<TransactionSynchronization> sortedSynchs = new ArrayList<>(synchs);
 			AnnotationAwareOrderComparator.sort(sortedSynchs);
 			return Collections.unmodifiableList(sortedSynchs);

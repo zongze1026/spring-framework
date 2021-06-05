@@ -73,7 +73,8 @@ public interface PlatformTransactionManager {
 	 * @see TransactionDefinition#getTimeout
 	 * @see TransactionDefinition#isReadOnly
 	 *
-	 * 根据指定的传播行为，返回当前活动的事务或创建一个新事务。
+	 * 根据指定的传播行为，返回当前活动的事务或创建一个新事务,最终的结果是返回一个TransactionStatus对象
+	 *
 	 *
 	 */
 	TransactionStatus getTransaction(@Nullable TransactionDefinition definition)

@@ -235,10 +235,11 @@ public class DataSourceTransactionManager extends AbstractPlatformTransactionMan
 
 	@Override
 	protected Object doGetTransaction() {
+		//DataSourceTransactionObject对象封装了数据源连接等信息
 		DataSourceTransactionObject txObject = new DataSourceTransactionObject();
 		txObject.setSavepointAllowed(isNestedTransactionAllowed());//设置是否允许嵌套事务
-		ConnectionHolder conHolder =
-				(ConnectionHolder) TransactionSynchronizationManager.getResource(obtainDataSource());
+		//从threadLocal中获取连接，第一次进入为null
+		ConnectionHolder conHolder = (ConnectionHolder) TransactionSynchronizationManager.getResource(obtainDataSource());
 		txObject.setConnectionHolder(conHolder, false);
 		return txObject;
 	}
@@ -359,6 +360,7 @@ public class DataSourceTransactionManager extends AbstractPlatformTransactionMan
 			logger.debug("Rolling back JDBC transaction on Connection [" + con + "]");
 		}
 		try {
+			//直接通过数据源连接回滚数据
 			con.rollback();
 		}
 		catch (SQLException ex) {
@@ -382,6 +384,7 @@ public class DataSourceTransactionManager extends AbstractPlatformTransactionMan
 
 		// Remove the connection holder from the thread, if exposed.
 		if (txObject.isNewConnectionHolder()) {
+			//移除ThreadLocal中的数据源连接
 			TransactionSynchronizationManager.unbindResource(obtainDataSource());
 		}
 
@@ -401,9 +404,11 @@ public class DataSourceTransactionManager extends AbstractPlatformTransactionMan
 			if (logger.isDebugEnabled()) {
 				logger.debug("Releasing JDBC Connection [" + con + "] after transaction");
 			}
+			//重置数据源连接的隔离级别和只读状态
 			DataSourceUtils.releaseConnection(con, this.dataSource);
 		}
 
+		//清除属性
 		txObject.getConnectionHolder().clear();
 	}
 

@@ -228,6 +228,7 @@ public abstract class DataSourceUtils {
 		Assert.notNull(con, "No Connection specified");
 		try {
 			// Reset transaction isolation to previous value, if changed for the transaction.
+			//如果当前事务设置了隔离级别，需要把隔离级别恢复到设置之前的值
 			if (previousIsolationLevel != null) {
 				if (logger.isDebugEnabled()) {
 					logger.debug("Resetting isolation level of JDBC Connection [" +
@@ -237,6 +238,7 @@ public abstract class DataSourceUtils {
 			}
 
 			// Reset read-only flag.
+			//重置只读状态
 			if (con.isReadOnly()) {
 				if (logger.isDebugEnabled()) {
 					logger.debug("Resetting read-only flag of JDBC Connection [" + con + "]");

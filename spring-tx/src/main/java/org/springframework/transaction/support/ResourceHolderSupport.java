@@ -49,6 +49,7 @@ public abstract class ResourceHolderSupport implements ResourceHolder {
 
 	/**
 	 * Mark the resource as synchronized with a transaction.
+	 * 将资源标记为与事务同步
 	 */
 	public void setSynchronizedWithTransaction(boolean synchronizedWithTransaction) {
 		this.synchronizedWithTransaction = synchronizedWithTransaction;

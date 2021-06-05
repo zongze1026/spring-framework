@@ -476,8 +476,7 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 			try {
 				//创建一个新的事务
 				boolean newSynchronization = (getTransactionSynchronization() != SYNCHRONIZATION_NEVER);
-				DefaultTransactionStatus status = newTransactionStatus(
-						definition, transaction, true, newSynchronization, debugEnabled, suspendedResources);
+				DefaultTransactionStatus status = newTransactionStatus(definition, transaction, true, newSynchronization, debugEnabled, suspendedResources);
 				doBegin(transaction, definition);
 				prepareSynchronization(status, definition);
 				return status;
@@ -626,11 +625,12 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 	 */
 	@Nullable
 	protected final SuspendedResourcesHolder suspend(@Nullable Object transaction) throws TransactionException {
-		//当前存在同步
+		//当前存在同步扩展接口
 		if (TransactionSynchronizationManager.isSynchronizationActive()) {
+			//挂起同步扩展接口，即：从ThreadLocal中移除
 			List<TransactionSynchronization> suspendedSynchronizations = doSuspendSynchronization();
 			try {
-				Object suspendedResources = null;
+				Object suspendedResources = null;  //记录事务中移除的数据源信息
 				//事务不为空的话挂起当前事务
 				if (transaction != null) {
 					suspendedResources = doSuspend(transaction);
@@ -651,12 +651,11 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 				doResumeSynchronization(suspendedSynchronizations);
 				throw ex;
 			}
-			// 2.没有同步,但事务不为空，挂起事务
+			// 2.没有同步扩展接口,但事务不为空，挂起事务
 		} else if (transaction != null) {
 			// Transaction active but no synchronization active.
 			Object suspendedResources = doSuspend(transaction);
 			return new SuspendedResourcesHolder(suspendedResources);
-			// 2.没有同步但，事务为空，什么都不用做
 		} else {
 			// Neither transaction nor synchronization active.
 			return null;
@@ -678,16 +677,20 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 			throws TransactionException {
 
 		if (resourcesHolder != null) {
+			//获取到线程挂起时备份的实例
 			Object suspendedResources = resourcesHolder.suspendedResources;
 			if (suspendedResources != null) {
+				//恢复数据源连接绑定到ThreadLocal
 				doResume(transaction, suspendedResources);
 			}
 			List<TransactionSynchronization> suspendedSynchronizations = resourcesHolder.suspendedSynchronizations;
 			if (suspendedSynchronizations != null) {
+				//恢复相关属性
 				TransactionSynchronizationManager.setActualTransactionActive(resourcesHolder.wasActive);
 				TransactionSynchronizationManager.setCurrentTransactionIsolationLevel(resourcesHolder.isolationLevel);
 				TransactionSynchronizationManager.setCurrentTransactionReadOnly(resourcesHolder.readOnly);
 				TransactionSynchronizationManager.setCurrentTransactionName(resourcesHolder.name);
+				//恢复同步扩展接口
 				doResumeSynchronization(suspendedSynchronizations);
 			}
 		}
@@ -720,8 +723,10 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 		List<TransactionSynchronization> suspendedSynchronizations =
 				TransactionSynchronizationManager.getSynchronizations();
 		for (TransactionSynchronization synchronization : suspendedSynchronizations) {
+			//回调一个扩展的方法
 			synchronization.suspend();
 		}
+		//移除ThreadLocal中所有同步扩展的接口
 		TransactionSynchronizationManager.clearSynchronization();
 		return suspendedSynchronizations;
 	}
@@ -735,7 +740,9 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 	private void doResumeSynchronization(List<TransactionSynchronization> suspendedSynchronizations) {
 		TransactionSynchronizationManager.initSynchronization();
 		for (TransactionSynchronization synchronization : suspendedSynchronizations) {
+			//触发业务回调（前提是定义的TransactionSynchronization有实现resume方法）
 			synchronization.resume();
+			//重新注册到ThreadLocal中
 			TransactionSynchronizationManager.registerSynchronization(synchronization);
 		}
 	}
@@ -830,6 +837,7 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 					throw new UnexpectedRollbackException(
 							"Transaction silently rolled back because it has been marked as rollback-only");
 				}
+				//出现异常时触发同步扩展接口的回调
 			} catch (UnexpectedRollbackException ex) {
 				// can only be caused by doCommit
 				triggerAfterCompletion(status, TransactionSynchronization.STATUS_ROLLED_BACK);
@@ -855,10 +863,13 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 			try {
 				triggerAfterCommit(status);
 			} finally {
+				//触发事务成功提交的回调
 				triggerAfterCompletion(status, TransactionSynchronization.STATUS_COMMITTED);
 			}
 
 		} finally {
+			//1.清理当前ThreadLocal数据源信息及相关属性
+			//2.判断是否存在外层事务，如果存在的话恢复外层事务的属性
 			cleanupAfterCompletion(status);
 		}
 	}
@@ -894,17 +905,21 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 			boolean unexpectedRollback = unexpected;
 
 			try {
+				//触发transactionSynchronization的回调方法
 				triggerBeforeCompletion(status);
 
+				//如果存在保存点，则恢复保存点
 				if (status.hasSavepoint()) {
 					if (status.isDebug()) {
 						logger.debug("Rolling back transaction to savepoint");
 					}
+					//回滚事务到保存点
 					status.rollbackToHeldSavepoint();
 				} else if (status.isNewTransaction()) {
 					if (status.isDebug()) {
 						logger.debug("Initiating transaction rollback");
 					}
+					//直接通过数据源连接回滚数据
 					doRollback(status);
 				} else {
 					// Participating in larger transaction
@@ -928,10 +943,12 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 					}
 				}
 			} catch (RuntimeException | Error ex) {
+				//触发同步回调
 				triggerAfterCompletion(status, TransactionSynchronization.STATUS_UNKNOWN);
 				throw ex;
 			}
 
+			//触发同步回调
 			triggerAfterCompletion(status, TransactionSynchronization.STATUS_ROLLED_BACK);
 
 			// Raise UnexpectedRollbackException if we had a global rollback-only marker
@@ -940,6 +957,8 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 						"Transaction rolled back because it has been marked as rollback-only");
 			}
 		} finally {
+			//1.清理当前ThreadLocal数据源信息及相关属性
+			//2.判断是否存在外层事务，如果存在的话恢复外层事务的属性
 			cleanupAfterCompletion(status);
 		}
 	}
@@ -1070,16 +1089,20 @@ public abstract class AbstractPlatformTransactionManager implements PlatformTran
 	private void cleanupAfterCompletion(DefaultTransactionStatus status) {
 		status.setCompleted();
 		if (status.isNewSynchronization()) {
+			//清理ThreadLocal中的同步扩展接口集合
 			TransactionSynchronizationManager.clear();
 		}
 		if (status.isNewTransaction()) {
+			//移除ThreadLocal中的数据源信息
 			doCleanupAfterCompletion(status.getTransaction());
 		}
+		//如果是嵌套事务的话，内层事务回滚的同时需要恢复外层事务
 		if (status.getSuspendedResources() != null) {
 			if (status.isDebug()) {
 				logger.debug("Resuming suspended transaction after completion of inner transaction");
 			}
 			Object transaction = (status.hasTransaction() ? status.getTransaction() : null);
+			//重新绑定数据源及相关的属性和TransactionSynchronization集合到ThreadLocal
 			resume(transaction, (SuspendedResourcesHolder) status.getSuspendedResources());
 		}
 	}
