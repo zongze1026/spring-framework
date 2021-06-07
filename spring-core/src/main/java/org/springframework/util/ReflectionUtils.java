@@ -401,7 +401,9 @@ public abstract class ReflectionUtils {
 	 */
 	public static void doWithMethods(Class<?> clazz, MethodCallback mc, @Nullable MethodFilter mf) {
 		// Keep backing up the inheritance hierarchy.
+		//反射获取所有的Method对象
 		Method[] methods = getDeclaredMethods(clazz);
+		//遍历所有的方法找出通知方法（排除连接点）
 		for (Method method : methods) {
 			if (mf != null && !mf.matches(method)) {
 				continue;
@@ -413,6 +415,7 @@ public abstract class ReflectionUtils {
 				throw new IllegalStateException("Not allowed to access method '" + method.getName() + "': " + ex);
 			}
 		}
+		//找出父类中所有的方法继续匹配通知方法
 		if (clazz.getSuperclass() != null) {
 			doWithMethods(clazz.getSuperclass(), mc, mf);
 		}

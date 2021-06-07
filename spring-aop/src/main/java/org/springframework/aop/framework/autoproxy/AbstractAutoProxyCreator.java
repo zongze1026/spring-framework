@@ -355,11 +355,13 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 		//获取到相应的通知（解析出advice和interceptors）
 		Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(bean.getClass(), beanName, null);
 		if (specificInterceptors != DO_NOT_PROXY) {
+			//匹配到通知的话，记录当前bean到缓存中
 			this.advisedBeans.put(cacheKey, Boolean.TRUE);
 			//1. new SingletonTargetSource(bean)这里将目标对象进行封装，将目标对象保存到SingletonTargetSource成员变量位置
 			//2.调用createProxy创建代理对象
 			Object proxy = createProxy(
 					bean.getClass(), beanName, specificInterceptors, new SingletonTargetSource(bean));
+			//缓存中记录代理对象的Class对象
 			this.proxyTypes.put(cacheKey, proxy.getClass());
 			return proxy;
 		}
@@ -371,6 +373,9 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	/**
 	 * Return whether the given bean class represents an infrastructure class
 	 * that should never be proxied.
+	 *
+	 * 返回给定的beanClass是否作为基础结构类，永远不被代理
+	 *
 	 * <p>The default implementation considers Advices, Advisors and
 	 * AopInfrastructureBeans as infrastructure classes.
 	 * @param beanClass the class of the bean
@@ -399,6 +404,11 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 	 * @param beanClass the class of the bean
 	 * @param beanName the name of the bean
 	 * @return whether to skip the given bean
+	 *
+	 * 子类应该重写此方法以返回{@code true}如果
+	 * 给定的bean不应该被这个后处理程序考虑为自动代理。
+	 * * <p>有时我们需要能够避免这种情况的发生，如果它将导致
+	 * *循环引用。这个实现返回{@code false}。
 	 */
 	protected boolean shouldSkip(Class<?> beanClass, String beanName) {
 		return false;
@@ -470,7 +480,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 			}
 		}
 
-		//将当前bean适合的advice，重新封装下，封装为Advisor类，然后添加到ProxyFactory中
+		//将当前bean适合的advice，统一封装为Advisor类型，然后添加到ProxyFactory中
 		Advisor[] advisors = buildAdvisors(beanName, specificInterceptors);
 		//将所有的通知存储到proxyFactory中
 		proxyFactory.addAdvisors(advisors);
@@ -549,7 +559,7 @@ public abstract class AbstractAutoProxyCreator extends ProxyProcessorSupport
 
 		Advisor[] advisors = new Advisor[allInterceptors.size()];
 		for (int i = 0; i < allInterceptors.size(); i++) {
-			//遍历所有的拦截器并封装成advisor对象
+			//遍历所有的通知和拦截器，如果类型不是Advisor类型的话（allInterceptors.get(i) instance of Advisor = false）就封装成Advisor类型
 			advisors[i] = this.advisorAdapterRegistry.wrap(allInterceptors.get(i));
 		}
 		return advisors;

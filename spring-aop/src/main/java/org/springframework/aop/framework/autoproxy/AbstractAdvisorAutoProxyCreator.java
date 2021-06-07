@@ -73,7 +73,7 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 	protected Object[] getAdvicesAndAdvisorsForBean(
 			Class<?> beanClass, String beanName, @Nullable TargetSource targetSource) {
 
-		//这里获取到所有的通知的方法，如@before、@after等
+		//这里获取到符合条件的通知方法，如@before、@after等
 		List<Advisor> advisors = findEligibleAdvisors(beanClass, beanName);
 		//如果没有获取到通知方法，返回null
 		if (advisors.isEmpty()) {
@@ -93,6 +93,7 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 	 * @see #extendAdvisors
 	 */
 	protected List<Advisor> findEligibleAdvisors(Class<?> beanClass, String beanName) {
+		//查找出所有的通知方法
 		List<Advisor> candidateAdvisors = findCandidateAdvisors();
 		List<Advisor> eligibleAdvisors = findAdvisorsThatCanApply(candidateAdvisors, beanClass, beanName);
 		extendAdvisors(eligibleAdvisors);
@@ -114,6 +115,9 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 	/**
 	 * Search the given candidate Advisors to find all Advisors that
 	 * can apply to the specified bean.
+	 *
+	 * 从所有的通知中找出能够被当前bean使用的通知
+	 *
 	 * @param candidateAdvisors the candidate Advisors
 	 * @param beanClass the target's bean class
 	 * @param beanName the target's bean name
@@ -123,6 +127,7 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 	protected List<Advisor> findAdvisorsThatCanApply(
 			List<Advisor> candidateAdvisors, Class<?> beanClass, String beanName) {
 
+		//为当前bean创建代理记录到ThreadLocal中
 		ProxyCreationContext.setCurrentProxiedBeanName(beanName);
 		try {
 			return AopUtils.findAdvisorsThatCanApply(candidateAdvisors, beanClass);
@@ -159,6 +164,9 @@ public abstract class AbstractAdvisorAutoProxyCreator extends AbstractAutoProxyC
 	/**
 	 * Extension hook that subclasses can override to register additional Advisors,
 	 * given the sorted Advisors obtained to date.
+	 *
+	 * 用于子类扩展的钩子方法，子类可以重写该方法添加更多的通知
+	 *
 	 * <p>The default implementation is empty.
 	 * <p>Typically used to add Advisors that expose contextual information
 	 * required by some of the later advisors.

@@ -42,4 +42,10 @@ public class PersonPoint {
 	}
 
 
+	@Around("point()")
+	public void around(){
+		System.out.println("打印系统当前时间："+System.currentTimeMillis());
+	}
+
+
 }

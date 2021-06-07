@@ -14,7 +14,7 @@ public class AopTest {
 		AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(MyConfiguration.class);
 		Person person = (Person) context.getBean("student");
 		System.out.println(person.sayName());
-		((Super)person).convert();
+//		((Super)person).convert();
 	}
 
 

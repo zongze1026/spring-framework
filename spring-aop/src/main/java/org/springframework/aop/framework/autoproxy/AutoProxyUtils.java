@@ -108,6 +108,7 @@ public abstract class AutoProxyUtils {
 			Class<?> targetClass) {
 
 		if (beanName != null && beanFactory.containsBeanDefinition(beanName)) {
+			//设置beanDefinition的属性，表示是一个代理对象
 			beanFactory.getMergedBeanDefinition(beanName).setAttribute(ORIGINAL_TARGET_CLASS_ATTRIBUTE, targetClass);
 		}
 	}
