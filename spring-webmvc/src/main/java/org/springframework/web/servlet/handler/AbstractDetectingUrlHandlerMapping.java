@@ -27,6 +27,8 @@ import org.springframework.util.ObjectUtils;
  * interface, detecting URL mappings for handler beans through introspection of all
  * defined beans in the application context.
  *
+ * HandlerMapping 接口的抽象实现，检测url映射的bean
+ *
  * @author Juergen Hoeller
  * @since 2.5
  * @see #determineUrlsForHandler
@@ -61,6 +63,8 @@ public abstract class AbstractDetectingUrlHandlerMapping extends AbstractUrlHand
 
 	/**
 	 * Register all handlers found in the current ApplicationContext.
+	 * 注册所有的handler到当前的容器
+	 *
 	 * <p>The actual URL determination for a handler is up to the concrete
 	 * {@link #determineUrlsForHandler(String)} implementation. A bean for
 	 * which no such URLs could be determined is simply not considered a handler.
@@ -72,11 +76,13 @@ public abstract class AbstractDetectingUrlHandlerMapping extends AbstractUrlHand
 		if (logger.isDebugEnabled()) {
 			logger.debug("Looking for URL mappings in application context: " + applicationContext);
 		}
+		//获取到容器中所有beanName
 		String[] beanNames = (this.detectHandlersInAncestorContexts ?
 				BeanFactoryUtils.beanNamesForTypeIncludingAncestors(applicationContext, Object.class) :
 				applicationContext.getBeanNamesForType(Object.class));
 
 		// Take any bean name that we can determine URLs for.
+		//查找controller bean和相关映射的url
 		for (String beanName : beanNames) {
 			String[] urls = determineUrlsForHandler(beanName);
 			if (!ObjectUtils.isEmpty(urls)) {

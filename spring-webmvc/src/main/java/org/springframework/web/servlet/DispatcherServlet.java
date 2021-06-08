@@ -936,6 +936,8 @@ public class DispatcherServlet extends FrameworkServlet {
 
 	/**
 	 * Process the actual dispatching to the handler.
+	 * 处理实际分发到handler
+	 *
 	 * <p>The handler will be obtained by applying the servlet's HandlerMappings in order.
 	 * The HandlerAdapter will be obtained by querying the servlet's installed HandlerAdapters
 	 * to find the first that supports the handler class.
@@ -961,6 +963,7 @@ public class DispatcherServlet extends FrameworkServlet {
 				multipartRequestParsed = (processedRequest != request);
 
 				// Determine handler for the current request.
+				//找出匹配当前请求的handler执行链
 				mappedHandler = getHandler(processedRequest);
 				if (mappedHandler == null) {
 					noHandlerFound(processedRequest, response);
@@ -968,6 +971,7 @@ public class DispatcherServlet extends FrameworkServlet {
 				}
 
 				// Determine handler adapter for the current request.
+				//找出匹配当前请求的适配器
 				HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
 
 				// Process last-modified header, if supported by the handler.
@@ -988,6 +992,7 @@ public class DispatcherServlet extends FrameworkServlet {
 				}
 
 				// Actually invoke the handler.
+				//执行控制器返回modelAndView对象
 				mv = ha.handle(processedRequest, response, mappedHandler.getHandler());
 
 				if (asyncManager.isConcurrentHandlingStarted()) {
@@ -1114,6 +1119,7 @@ public class DispatcherServlet extends FrameworkServlet {
 	 * @see MultipartResolver#resolveMultipart
 	 */
 	protected HttpServletRequest checkMultipart(HttpServletRequest request) throws MultipartException {
+		//如果是表单请求把request封装成表单请求，否则直接返回
 		if (this.multipartResolver != null && this.multipartResolver.isMultipart(request)) {
 			if (WebUtils.getNativeRequest(request, MultipartHttpServletRequest.class) != null) {
 				logger.debug("Request is already a MultipartHttpServletRequest - if not in a forward, " +
@@ -1173,6 +1179,8 @@ public class DispatcherServlet extends FrameworkServlet {
 
 	/**
 	 * Return the HandlerExecutionChain for this request.
+	 * 返回handler执行链
+	 *
 	 * <p>Tries all handler mappings in order.
 	 * @param request current HTTP request
 	 * @return the HandlerExecutionChain, or {@code null} if no handler could be found

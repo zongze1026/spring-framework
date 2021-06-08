@@ -210,6 +210,7 @@ public abstract class FrameworkServlet extends HttpServletBean implements Applic
 	private WebApplicationContext webApplicationContext;
 
 	/** If the WebApplicationContext was injected via {@link #setApplicationContext} */
+	//改状态记录spring容器是否注入
 	private boolean webApplicationContextInjected = false;
 
 	/** Flag used to detect whether onRefresh has already been called */
